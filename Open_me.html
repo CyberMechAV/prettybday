@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Preethiiii Birthday</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: #ffe6f2; overflow: hidden;
+    }
+    canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+    }
+    #container {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2; display: flex; align-items: center;
+      white-space: nowrap;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+    #happy, #countdown, #rest {
+      opacity: 0; display: inline-block;
+      transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+      color: #6b2e4a; text-shadow: 0 0 5px #b76e79, 0 0 10px #b76e79;
+    }
+    #happy, #rest { font-size: 48px; }
+    #countdown { font-size: 120px; margin: 0 16px; opacity: 1; }
+    #polaroid-container {
+      opacity: 0; margin-left: 30px;
+      background: #fff; padding: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transform: rotate(-8deg) scale(0.8);
+      transition: opacity 1s ease-in-out, transform 0.8s ease-in-out;
+    }
+    #polaroid { display: block; width: 150px; height: auto; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="container">
+    <span id="happy">Happy</span>
+    <span id="countdown">1</span>
+    <span id="rest">Birthday Preethiiii Maaa</span>
+    <div id="polaroid-container">
+      <img id="polaroid" src="polaroid.jpeg" alt="Polaroid">
+    </div>
+  </div>
+
+  <script>
+  window.onload = () => {
+    const happyEl = document.getElementById('happy');
+    const countEl = document.getElementById('countdown');
+    const restEl  = document.getElementById('rest');
+    const polyEl  = document.getElementById('polaroid-container');
+    const canvas  = document.getElementById('canvas');
+    const ctx     = canvas.getContext('2d');
+
+    let cw = canvas.width = window.innerWidth;
+    let ch = canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      cw = canvas.width = window.innerWidth;
+      ch = canvas.height = window.innerHeight;
+    });
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    let revolveMode = false;
+    let particles = [];
+    let t = 0;
+
+    class Particle {
+      constructor(x, y, vx, vy, revolve = false) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.size = revolve ? 5 : 3;  // swirl bigger
+        this.alpha = 1;
+        this.decay = revolve ? 0.0005 : 0.001;
+        this.revolve = revolve;
+        this.offset = Math.random() * Math.PI * 2;
+      }
+      update(i) {
+        if (this.revolve) {
+          const a = 150; const b = 75;
+          const lt = t + this.offset;
+          this.x = cw/2 + a * Math.sin(lt);
+          this.y = ch/2 + b * Math.sin(2*lt);
+        } else {
+          this.x += this.vx;
+          this.y += this.vy;
+        }
+        this.alpha -= this.decay;
+        if (this.alpha <= 0) particles.splice(i, 1);
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+        ctx.fillStyle = `hsla(45, 100%, 60%, ${this.alpha})`;
+        ctx.shadowBlur = 25; ctx.shadowColor = 'gold';
+        ctx.fill();
+      }
+    }
+
+    function spawnRandom() {
+      for (let i = 0; i < 3; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 0.2 + 0.1;
+        particles.push(new Particle(
+          Math.random()*cw, Math.random()*ch,
+          Math.cos(angle)*speed, Math.sin(angle)*speed
+        ));
+      }
+    }
+    function spawnInfinity() {
+      particles.push(new Particle(0,0,0,0,true));
+    }
+
+    // Countdown
+    let count = 1;
+    countEl.textContent = count;
+    const interval = setInterval(() => {
+      count++;
+      if (count <= 22) {
+        countEl.style.opacity = 0;
+        setTimeout(() => {
+          countEl.textContent = count;
+          countEl.style.opacity = 1;
+        }, 200);
+      }
+      if (count === 22) {
+        clearInterval(interval);
+        setTimeout(() => {
+          countEl.textContent = '22nd';
+          happyEl.style.opacity = 1;
+          happyEl.style.transform = 'translateX(-20px)';
+          restEl.style.opacity = 1;
+          restEl.style.transform = 'translateX(20px)';
+          polyEl.style.opacity = 1;
+          polyEl.style.transform = 'rotate(-2deg) scale(1)';
+          revolveMode = true;
+        }, 500);
+      }
+    }, 1000);
+
+    function loop() {
+      requestAnimationFrame(loop);
+      ctx.fillStyle = 'rgba(255,230,242,0.02)';
+      ctx.fillRect(0, 0, cw, ch);
+
+      if (revolveMode) {
+        t += 0.003;
+        if (particles.filter(p => p.revolve).length < 100) spawnInfinity();
+        // ⚡ NO random sparkles now!
+      } else {
+        spawnRandom();
+      }
+
+      particles.forEach((p, i) => {
+        p.update(i);
+        p.draw();
+      });
+    }
+    loop();
+  };
+  </script>
+</body>
+</html>
