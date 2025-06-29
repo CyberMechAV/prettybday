@@ -2,57 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Birthday Surprise</title>
+  <title>Preethiiii Birthday Surprise</title>
   <style>
     html, body {
-      margin:0; padding:0; width:100%; height:100%;
-      background:#ffe6f2; overflow:hidden;
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: #ffe6f2; overflow: hidden;
     }
     canvas {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%; z-index:1;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; z-index: 1;
     }
+    /* Centered countdown */
+    #countdown-container {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      font-size: clamp(50px, 15vw, 100px);
+      color: #6b2e4a;
+      text-shadow: 0 0 5px #b76e79, 0 0 10px #b76e79;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      transition: opacity 0.8s ease;
+    }
+    /* Final wish + Polaroid */
     #container {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      z-index:2;
-      display:flex; flex-direction:column;
-      align-items:center; text-align:center;
-      max-width:90vw; word-break:break-word;
-      font-family:'Comic Sans MS',cursive,sans-serif;
+      position: fixed; top: 55%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      max-width: 90vw; word-break: break-word;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      opacity: 0;
+      transition: opacity 1s ease;
     }
     #happy, #rest {
-      font-size:clamp(24px,6vw,48px);
-      color:#6b2e4a;
-      text-shadow:0 0 5px #b76e79,0 0 10px #b76e79;
-      opacity:0;
-      transition:opacity .8s ease,transform .8s ease;
-    }
-    #countdown {
-      font-size:clamp(50px,15vw,100px);
-      margin:8px 0;
-      color:#6b2e4a;
-      text-shadow:0 0 5px #b76e79,0 0 10px #b76e79;
-      opacity:1;
+      font-size: clamp(24px, 6vw, 48px);
+      color: #6b2e4a;
+      text-shadow: 0 0 5px #b76e79, 0 0 10px #b76e79;
     }
     #polaroid-container {
-      opacity:0; margin-top:20px;
-      background:#fff; padding:6px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.3);
-      transform:rotate(-8deg) scale(.8);
-      transition:opacity 1s ease, transform .8s ease;
-      max-width:50vw;
+      margin-top: 20px;
+      background: #fff; padding: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transform: rotate(-8deg) scale(0.8);
+      transition: transform 0.8s ease;
+      max-width: 50vw;
     }
     #polaroid {
-      width:100%; height:auto; border-radius:4px;
+      width: 100%; height: auto; border-radius: 4px;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+
+  <!-- Countdown layer -->
+  <div id="countdown-container">1</div>
+
+  <!-- Final wish layer -->
   <div id="container">
-    <span id="happy">Happy</span>
-    <span id="countdown">1</span>
+    <span id="happy">Happy 22nd</span>
     <span id="rest">Birthday Preethiiii Maaa</span>
     <div id="polaroid-container">
       <img id="polaroid" src="polaroid.jpeg" alt="Polaroid">
@@ -60,115 +69,114 @@
   </div>
 
   <script>
-  window.onload = () => {
-    const canvas = document.getElementById('canvas'),
-          ctx    = canvas.getContext('2d'),
-          happy  = document.getElementById('happy'),
-          countEl= document.getElementById('countdown'),
-          rest   = document.getElementById('rest'),
-          poly   = document.getElementById('polaroid-container');
+    window.onload = () => {
+      const cvs = document.getElementById('canvas'),
+            ctx = cvs.getContext('2d'),
+            countEl = document.getElementById('countdown-container'),
+            container = document.getElementById('container'),
+            poly = document.getElementById('polaroid-container');
 
-    let cw, ch, dpr;
-    let particles = [], t=0, revolve=false;
+      let cw, ch, dpr;
+      let particles = [], t = 0, revolve = false;
 
-    function resize(){
-      dpr = window.devicePixelRatio||1;
-      canvas.width  = window.innerWidth*dpr;
-      canvas.height = window.innerHeight*dpr;
-      ctx.setTransform(1,0,0,1,0,0);
-      ctx.scale(dpr,dpr);
-      cw = window.innerWidth; ch = window.innerHeight;
-      particles = [];
-    }
-    window.addEventListener('resize', resize); resize();
-
-    ctx.globalCompositeOperation = 'lighter';
-
-    class P {
-      constructor(x,y,vx,vy){
-        this.x=x; this.y=y; this.vx=vx; this.vy=vy;
-        this.size=4; this.alpha=1; this.decay=0.0001;
+      function resize() {
+        dpr = window.devicePixelRatio || 1;
+        cvs.width = window.innerWidth * dpr;
+        cvs.height = window.innerHeight * dpr;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+        cw = window.innerWidth; ch = window.innerHeight;
+        particles = [];
       }
-      update(i){
-        this.x+=this.vx; this.y+=this.vy;
-        this.alpha-=this.decay;
-        if(this.alpha<=0) particles.splice(i,1);
+      window.addEventListener('resize', resize); resize();
+      ctx.globalCompositeOperation = 'lighter';
+
+      class P {
+        constructor(x, y, vx, vy) {
+          this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+          this.size = 4; this.alpha = 1; this.decay = 0.0001;
+        }
+        update(i) {
+          this.x += this.vx; this.y += this.vy;
+          this.alpha -= this.decay;
+          if (this.alpha <= 0) particles.splice(i, 1);
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+          ctx.fillStyle = `hsla(45, 100%, 60%, ${this.alpha})`;
+          ctx.shadowBlur = 40; ctx.shadowColor = 'gold';
+          ctx.fill();
+        }
       }
-      draw(){
+
+      function spawnRandom() {
+        for (let i = 0; i < 4; i++) {
+          const ang = Math.random() * 2 * Math.PI,
+                sp = Math.random() * 0.2 + 0.05;
+          particles.push(new P(
+            Math.random() * cw, Math.random() * ch,
+            Math.cos(ang) * sp, Math.sin(ang) * sp
+          ));
+        }
+      }
+
+      function drawInfinity() {
+        const swirlX = cw / 2;
+        const swirlY = ch / 2 - 60;  // lifted swirl
+        const a = Math.max(Math.min(cw / 3, 250), 150);
+        const b = Math.max(Math.min(ch / 6, 150), 80);
+
         ctx.beginPath();
-        ctx.arc(this.x,this.y,this.size,0,2*Math.PI);
-        ctx.fillStyle = `hsla(45,100%,60%,${this.alpha})`;
-        ctx.shadowBlur=40; ctx.shadowColor='gold';
-        ctx.fill();
-      }
-    }
-
-    function spawnRandom(){
-      for(let i=0;i<4;i++){
-        const ang = Math.random()*2*Math.PI,
-              sp  = Math.random()*0.2+0.05;
-        particles.push(new P(
-          Math.random()*cw, Math.random()*ch,
-          Math.cos(ang)*sp, Math.sin(ang)*sp
-        ));
-      }
-    }
-
-    // countdown
-    let num=1;
-    countEl.textContent=num;
-    const iv=setInterval(()=>{
-      num++;
-      if(num<=22){
-        countEl.style.opacity=0;
-        setTimeout(()=>{
-          countEl.textContent=num;
-          countEl.style.opacity=1;
-        },200);
-      }
-      if(num===22){
-        clearInterval(iv);
-        setTimeout(()=>{
-          countEl.textContent='22nd';
-          happy.style.opacity=1; rest.style.opacity=1;
-          poly.style.opacity=1; poly.style.transform='rotate(-2deg) scale(1)';
-          revolve=true;
-        },500);
-      }
-    },1000);
-
-    function drawInfinity(){
-      const a = Math.max(Math.min(cw/3,250),150),
-            b = Math.max(Math.min(ch/6,150),80);
-      ctx.beginPath();
-      for(let i=0;i<=100;i++){
-        const lt = t + (i/100)*Math.PI*2;
-        const x = cw/2 + a*Math.sin(lt);
-        const y = ch/2 + b*Math.sin(2*lt);
-        i===0? ctx.moveTo(x,y): ctx.lineTo(x,y);
-      }
-      ctx.closePath();
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = 'rgba(255,215,0,0.8)';
-      ctx.shadowBlur = 20; ctx.shadowColor = 'gold';
-      ctx.stroke();
-    }
-
-    (function loop(){
-      requestAnimationFrame(loop);
-      ctx.fillStyle='rgba(255,230,242,0.02)';
-      ctx.fillRect(0,0,cw,ch);
-
-      if(!revolve){
-        spawnRandom();
-      } else {
-        t += 0.02;            // speed
-        drawInfinity();
+        for (let i = 0; i <= 100; i++) {
+          const lt = t + (i / 100) * Math.PI * 2;
+          const x = swirlX + a * Math.sin(lt);
+          const y = swirlY + b * Math.sin(2 * lt);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = 'rgba(255,215,0,0.8)';
+        ctx.shadowBlur = 20; ctx.shadowColor = 'gold';
+        ctx.stroke();
       }
 
-      particles.forEach((p,i)=>{ p.update(i); p.draw(); });
-    })();
-  };
+      // Smooth countdown
+      let num = 1;
+      function showCount() {
+        if (num <= 22) {
+          countEl.style.opacity = 0;
+          setTimeout(() => {
+            countEl.textContent = num;
+            countEl.style.opacity = 1;
+          }, 100);
+          if (num < 22) {
+            num++;
+            setTimeout(showCount, 1000);
+          } else {
+            setTimeout(() => {
+              countEl.textContent = '22nd';
+              countEl.style.opacity = 0;
+              container.style.opacity = 1;
+              poly.style.transform = 'rotate(-2deg) scale(1)';
+              revolve = true;
+            }, 800);
+          }
+        }
+      }
+      showCount();
+
+      (function loop() {
+        requestAnimationFrame(loop);
+        ctx.fillStyle = 'rgba(255,230,242,0.02)';
+        ctx.fillRect(0, 0, cw, ch);
+
+        if (!revolve) { spawnRandom(); }
+        else { t += 0.02; drawInfinity(); }
+
+        particles.forEach((p, i) => { p.update(i); p.draw(); });
+      })();
+    };
   </script>
 </body>
 </html>
