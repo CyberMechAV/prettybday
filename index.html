@@ -5,54 +5,46 @@
   <title>Preethiiii Birthday Surprise</title>
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%;
+      margin: 0; padding: 0; width:100%; height:100%;
       background: #ffe6f2; overflow: hidden;
     }
     canvas {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; z-index:1;
     }
     #container {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 2;
-      display: flex;
-      flex-direction: column; /* stacked text */
-      align-items: center;
-      justify-content: center;
-      max-width: 90vw; /* never overflow on mobile */
-      word-break: break-word;
-      text-align: center;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
+      position: absolute; top:50%; left:50%;
+      transform: translate(-50%,-50%);
+      z-index:2;
+      display:flex; flex-direction:column;
+      align-items:center; text-align:center;
+      max-width:90vw; word-break:break-word;
+      font-family:'Comic Sans MS',cursive,sans-serif;
     }
     #happy, #rest {
-      font-size: clamp(24px, 6vw, 48px);
-      color: #6b2e4a;
-      text-shadow: 0 0 5px #b76e79, 0 0 10px #b76e79;
-      opacity: 0;
-      transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+      font-size: clamp(24px,6vw,48px);
+      color:#6b2e4a;
+      text-shadow:0 0 5px #b76e79,0 0 10px #b76e79;
+      opacity:0;
+      transition:opacity .8s ease-in-out,transform .8s ease-in-out;
     }
     #countdown {
-      font-size: clamp(50px, 15vw, 100px);
-      margin: 8px 0;
-      color: #6b2e4a;
-      text-shadow: 0 0 5px #b76e79, 0 0 10px #b76e79;
-      opacity: 1;
+      font-size: clamp(50px,15vw,100px);
+      margin:8px 0;
+      color:#6b2e4a;
+      text-shadow:0 0 5px #b76e79,0 0 10px #b76e79;
+      opacity:1;
     }
     #polaroid-container {
-      opacity: 0;
-      margin-top: 20px;
-      background: #fff; 
-      padding: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transform: rotate(-8deg) scale(0.8);
-      transition: opacity 1s ease-in-out, transform 0.8s ease-in-out;
-      max-width: 50vw;
+      opacity:0; margin-top:20px;
+      background:#fff; padding:6px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      transform:rotate(-8deg) scale(.8);
+      transition:opacity 1s ease-in-out,transform .8s ease-in-out;
+      max-width:50vw;
     }
     #polaroid {
-      display: block;
-      width: 100%; height: auto;
-      border-radius: 4px;
+      display:block; width:100%; height:auto; border-radius:4px;
     }
   </style>
 </head>
@@ -68,130 +60,119 @@
   </div>
 
   <script>
-    window.onload = () => {
-      const happyEl = document.getElementById('happy');
-      const countEl = document.getElementById('countdown');
-      const restEl  = document.getElementById('rest');
-      const polyEl  = document.getElementById('polaroid-container');
-      const canvas  = document.getElementById('canvas');
-      const ctx     = canvas.getContext('2d');
+  window.onload = () => {
+    const canvas = document.getElementById('canvas');
+    const ctx    = canvas.getContext('2d');
+    const happy  = document.getElementById('happy');
+    const count  = document.getElementById('countdown');
+    const rest   = document.getElementById('rest');
+    const poly   = document.getElementById('polaroid-container');
 
-      let cw, ch, dpr;
-      function resize() {
-        dpr = window.devicePixelRatio || 1;
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
-        cw = window.innerWidth;
-        ch = window.innerHeight;
-        particles = []; // clear all particles on resize
+    let cw, ch, dpr, particles = [], t = 0, revolve = false;
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      canvas.width  = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr,dpr);
+      cw = window.innerWidth;
+      ch = window.innerHeight;
+      particles = [];
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    class Particle {
+      constructor(x,y,vx,vy,rev=false){
+        this.x=x; this.y=y; this.vx=vx; this.vy=vy;
+        this.size=rev?6:5;
+        this.alpha=1;
+        this.decay = rev?0.00005:0.0001;
+        this.rev = rev;
+        this.offset = Math.random()*Math.PI*2;
       }
-      resize();
-      window.addEventListener('resize', resize);
-
-      ctx.globalCompositeOperation = 'lighter';
-
-      let revolveMode = false;
-      let particles = [];
-      let t = 0;
-
-      class Particle {
-        constructor(x, y, vx, vy, revolve = false) {
-          this.x = x; this.y = y;
-          this.vx = vx; this.vy = vy;
-          this.size = revolve ? 5 : 4;
-          this.alpha = 1;
-          this.decay = revolve ? 0.0001 : 0.0001; // long lifetime
-          this.revolve = revolve;
-          this.offset = Math.random() * Math.PI * 2;
-        }
-        update(i) {
-          if (this.revolve) {
-            const a = Math.max(Math.min(cw/5, 200), 100);
-            const b = Math.max(Math.min(ch/10, 100), 50);
-            const lt = t + this.offset;
-            this.x = cw/2 + a * Math.sin(lt);
-            this.y = ch/2 + b * Math.sin(2 * lt);
-          } else {
-            this.x += this.vx;
-            this.y += this.vy;
-          }
-          this.alpha -= this.decay;
-          if (this.alpha <= 0) particles.splice(i, 1);
-        }
-        draw() {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
-          ctx.fillStyle = `hsla(45, 100%, 60%, ${this.alpha})`;
-          ctx.shadowBlur = 40;
-          ctx.shadowColor = 'gold';
-          ctx.fill();
-        }
-      }
-
-      function spawnRandom() {
-        for (let i = 0; i < 4; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 0.2 + 0.05;
-          particles.push(new Particle(
-            Math.random() * cw, Math.random() * ch,
-            Math.cos(angle) * speed, Math.sin(angle) * speed
-          ));
-        }
-      }
-
-      function spawnInfinity() {
-        for (let i = 0; i < 2; i++) {
-          particles.push(new Particle(0, 0, 0, 0, true));
-        }
-      }
-
-      let count = 1;
-      countEl.textContent = count;
-      const interval = setInterval(() => {
-        count++;
-        if (count <= 22) {
-          countEl.style.opacity = 0;
-          setTimeout(() => {
-            countEl.textContent = count;
-            countEl.style.opacity = 1;
-          }, 200);
-        }
-        if (count === 22) {
-          clearInterval(interval);
-          setTimeout(() => {
-            countEl.textContent = '22nd';
-            happyEl.style.opacity = 1;
-            happyEl.style.transform = 'translateY(-5px)';
-            restEl.style.opacity = 1;
-            restEl.style.transform = 'translateY(5px)';
-            polyEl.style.opacity = 1;
-            polyEl.style.transform = 'rotate(-2deg) scale(1)';
-            revolveMode = true; // stop random, swirl only
-          }, 500);
-        }
-      }, 1000);
-
-      function loop() {
-        requestAnimationFrame(loop);
-        ctx.fillStyle = 'rgba(255,230,242,0.02)';
-        ctx.fillRect(0, 0, cw, ch);
-
-        if (revolveMode) {
-          t += 0.002;
-          if (particles.filter(p => p.revolve).length < 200) spawnInfinity();
+      update(i){
+        if(this.rev){
+          const a=Math.max(Math.min(cw/4,200),120);
+          const b=Math.max(Math.min(ch/8,100),50);
+          const lt=t+this.offset;
+          this.x = cw/2 + a*Math.sin(lt);
+          this.y = ch/2 + b*Math.sin(2*lt);
         } else {
-          spawnRandom();
+          this.x += this.vx;
+          this.y += this.vy;
         }
-
-        particles.forEach((p, i) => {
-          p.update(i);
-          p.draw();
-        });
+        this.alpha -= this.decay;
+        if(this.alpha<=0) particles.splice(i,1);
       }
-      loop();
-    };
+      draw(){
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.size,0,2*Math.PI);
+        ctx.fillStyle = `hsla(45,100%,60%,${this.alpha})`;
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = 'gold';
+        ctx.fill();
+      }
+    }
+
+    function spawnRandom(){
+      for(let i=0;i<4;i++){
+        const ang = Math.random()*Math.PI*2;
+        const sp = Math.random()*0.2+0.05;
+        particles.push(new Particle(
+          Math.random()*cw,Math.random()*ch,
+          Math.cos(ang)*sp,Math.sin(ang)*sp
+        ));
+      }
+    }
+
+    function spawnInfinity(){
+      particles.push(new Particle(0,0,0,0,true));
+    }
+
+    // Countdown + reveal
+    let num = 1;
+    count.textContent = num;
+    const iv = setInterval(()=>{
+      num++;
+      if(num<=22){
+        count.style.opacity=0;
+        setTimeout(()=>{
+          count.textContent = num;
+          count.style.opacity=1;
+        },200);
+      }
+      if(num===22){
+        clearInterval(iv);
+        setTimeout(()=>{
+          count.textContent='22nd';
+          happy.style.opacity=1;
+          rest.style.opacity=1;
+          poly.style.opacity=1;
+          poly.style.transform='rotate(-2deg) scale(1)';
+          revolve=true;
+        },500);
+      }
+    },1000);
+
+    // Main loop
+    (function loop(){
+      requestAnimationFrame(loop);
+      ctx.fillStyle='rgba(255,230,242,0.02)';
+      ctx.fillRect(0,0,cw,ch);
+
+      if(revolve){
+        t += 0.002;
+        if(particles.filter(p=>p.rev).length<200) spawnInfinity();
+      } else {
+        spawnRandom();
+      }
+
+      particles.forEach((p,i)=>{ p.update(i); p.draw(); });
+    })();
+  };
   </script>
 </body>
 </html>
