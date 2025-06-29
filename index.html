@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Preethiiii Birthday Surprise</title>
+  <title>Preethiiii Birthday</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%;
@@ -55,11 +55,20 @@
     const canvas  = document.getElementById('canvas');
     const ctx     = canvas.getContext('2d');
 
-    let cw = canvas.width = window.innerWidth;
-    let ch = canvas.height = window.innerHeight;
+    let cw, ch, dpr;
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      cw = window.innerWidth;
+      ch = window.innerHeight;
+    }
+    resize();
     window.addEventListener('resize', () => {
-      cw = canvas.width = window.innerWidth;
-      ch = canvas.height = window.innerHeight;
+      resize();
+      particles = []; // clear particles on resize
     });
 
     ctx.globalCompositeOperation = 'lighter';
@@ -71,9 +80,9 @@
     class Particle {
       constructor(x, y, vx, vy, revolve = false) {
         this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-        this.size = revolve ? 5 : 4;  // swirl bigger
+        this.size = revolve ? 5 : 4;
         this.alpha = 1;
-        this.decay = revolve ? 0.0001 : 0.00009; // swirl: super slow fade, random: 10–12 sec
+        this.decay = revolve ? 0.0001 : 0.0001; // longer fade
         this.revolve = revolve;
         this.offset = Math.random() * Math.PI * 2;
       }
@@ -137,20 +146,20 @@
           restEl.style.transform = 'translateX(20px)';
           polyEl.style.opacity = 1;
           polyEl.style.transform = 'rotate(-2deg) scale(1)';
-          revolveMode = true; // switch to swirl only
+          revolveMode = true;
         }, 500);
       }
     }, 1000);
 
     function loop() {
       requestAnimationFrame(loop);
-      ctx.fillStyle = 'rgba(255,230,242,0.01)';
+      ctx.fillStyle = 'rgba(255,230,242,0.02)';
       ctx.fillRect(0, 0, cw, ch);
 
       if (revolveMode) {
         t += 0.002;
         if (particles.filter(p => p.revolve).length < 200) spawnInfinity();
-        // ⚡ NO random sparkles after swirl starts
+        // No random sparkles
       } else {
         spawnRandom();
       }
