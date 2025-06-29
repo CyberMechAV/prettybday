@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Preethiiii Birthday</title>
+  <title>Preethiiii Birthday Surprise</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%;
@@ -71,16 +71,16 @@
     class Particle {
       constructor(x, y, vx, vy, revolve = false) {
         this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-        this.size = revolve ? 7 : 4;  // swirl bigger
+        this.size = revolve ? 5 : 4;  // swirl bigger
         this.alpha = 1;
-        this.decay = revolve ? 0.0003 : 0.001;
+        this.decay = revolve ? 0.0001 : 0.00009; // swirl: super slow fade, random: 10–12 sec
         this.revolve = revolve;
         this.offset = Math.random() * Math.PI * 2;
       }
       update(i) {
         if (this.revolve) {
-          const a = Math.max(Math.min(cw/4, 200), 100); // clamp swirl width
-          const b = Math.max(Math.min(ch/8, 100), 50);  // clamp swirl height
+          const a = Math.max(Math.min(cw/4, 200), 120);
+          const b = Math.max(Math.min(ch/8, 100), 60);
           const lt = t + this.offset;
           this.x = cw/2 + a * Math.sin(lt);
           this.y = ch/2 + b * Math.sin(2*lt);
@@ -95,15 +95,15 @@
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
         ctx.fillStyle = `hsla(45, 100%, 60%, ${this.alpha})`;
-        ctx.shadowBlur = 35; ctx.shadowColor = 'gold';
+        ctx.shadowBlur = 40; ctx.shadowColor = 'gold';
         ctx.fill();
       }
     }
 
     function spawnRandom() {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 0.2 + 0.1;
+        const speed = Math.random() * 0.2 + 0.05;
         particles.push(new Particle(
           Math.random()*cw, Math.random()*ch,
           Math.cos(angle)*speed, Math.sin(angle)*speed
@@ -111,7 +111,9 @@
       }
     }
     function spawnInfinity() {
-      particles.push(new Particle(0,0,0,0,true));
+      for (let i = 0; i < 2; i++) {
+        particles.push(new Particle(0,0,0,0,true));
+      }
     }
 
     let count = 1;
@@ -135,7 +137,7 @@
           restEl.style.transform = 'translateX(20px)';
           polyEl.style.opacity = 1;
           polyEl.style.transform = 'rotate(-2deg) scale(1)';
-          revolveMode = true;
+          revolveMode = true; // switch to swirl only
         }, 500);
       }
     }, 1000);
@@ -146,9 +148,9 @@
       ctx.fillRect(0, 0, cw, ch);
 
       if (revolveMode) {
-        t += 0.003;
-        if (particles.filter(p => p.revolve).length < 150) spawnInfinity();
-        // ⚡ No random sparkles once swirl starts
+        t += 0.002;
+        if (particles.filter(p => p.revolve).length < 200) spawnInfinity();
+        // ⚡ NO random sparkles after swirl starts
       } else {
         spawnRandom();
       }
