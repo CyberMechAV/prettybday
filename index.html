@@ -71,15 +71,16 @@
     class Particle {
       constructor(x, y, vx, vy, revolve = false) {
         this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-        this.size = revolve ? 5 : 3;  // swirl bigger
+        this.size = revolve ? 7 : 4;  // swirl bigger
         this.alpha = 1;
-        this.decay = revolve ? 0.0005 : 0.001;
+        this.decay = revolve ? 0.0003 : 0.001;
         this.revolve = revolve;
         this.offset = Math.random() * Math.PI * 2;
       }
       update(i) {
         if (this.revolve) {
-          const a = 150; const b = 75;
+          const a = Math.max(Math.min(cw/4, 200), 100); // clamp swirl width
+          const b = Math.max(Math.min(ch/8, 100), 50);  // clamp swirl height
           const lt = t + this.offset;
           this.x = cw/2 + a * Math.sin(lt);
           this.y = ch/2 + b * Math.sin(2*lt);
@@ -94,7 +95,7 @@
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
         ctx.fillStyle = `hsla(45, 100%, 60%, ${this.alpha})`;
-        ctx.shadowBlur = 25; ctx.shadowColor = 'gold';
+        ctx.shadowBlur = 35; ctx.shadowColor = 'gold';
         ctx.fill();
       }
     }
@@ -113,7 +114,6 @@
       particles.push(new Particle(0,0,0,0,true));
     }
 
-    // Countdown
     let count = 1;
     countEl.textContent = count;
     const interval = setInterval(() => {
@@ -142,13 +142,13 @@
 
     function loop() {
       requestAnimationFrame(loop);
-      ctx.fillStyle = 'rgba(255,230,242,0.02)';
+      ctx.fillStyle = 'rgba(255,230,242,0.01)';
       ctx.fillRect(0, 0, cw, ch);
 
       if (revolveMode) {
         t += 0.003;
-        if (particles.filter(p => p.revolve).length < 100) spawnInfinity();
-        // ⚡ NO random sparkles now!
+        if (particles.filter(p => p.revolve).length < 150) spawnInfinity();
+        // ⚡ No random sparkles once swirl starts
       } else {
         spawnRandom();
       }
