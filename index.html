@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Birthday Surprise</title>
   <style>
     html, body {
@@ -19,20 +19,21 @@
       display:flex; flex-direction:column;
       align-items:center; text-align:center;
       max-width:90vw; word-break:break-word;
-      font-family:'Comic Sans MS', cursive, sans-serif;
+      font-family:'Comic Sans MS',cursive,sans-serif;
     }
     #happy, #rest {
       font-size:clamp(24px,6vw,48px);
-      opacity:0;
-      transition:opacity .8s ease, transform .8s ease;
       color:#6b2e4a;
       text-shadow:0 0 5px #b76e79,0 0 10px #b76e79;
+      opacity:0;
+      transition:opacity .8s ease,transform .8s ease;
     }
     #countdown {
       font-size:clamp(50px,15vw,100px);
       margin:8px 0;
       color:#6b2e4a;
       text-shadow:0 0 5px #b76e79,0 0 10px #b76e79;
+      opacity:1;
     }
     #polaroid-container {
       opacity:0; margin-top:20px;
@@ -57,130 +58,117 @@
       <img id="polaroid" src="polaroid.jpeg" alt="Polaroid">
     </div>
   </div>
+
   <script>
-    window.onload = () => {
-      // Elements
-      const cvs = document.getElementById('canvas'),
-            ctx = cvs.getContext('2d'),
-            happy = document.getElementById('happy'),
-            countEl = document.getElementById('countdown'),
-            rest = document.getElementById('rest'),
-            poly = document.getElementById('polaroid-container');
+  window.onload = () => {
+    const canvas = document.getElementById('canvas'),
+          ctx    = canvas.getContext('2d'),
+          happy  = document.getElementById('happy'),
+          countEl= document.getElementById('countdown'),
+          rest   = document.getElementById('rest'),
+          poly   = document.getElementById('polaroid-container');
 
-      // Canvas sizing
-      let cw, ch, dpr;
-      let particles = [], t = 0;
-      let revolt = false; // swirl mode
+    let cw, ch, dpr;
+    let particles = [], t=0, revolve=false;
 
-      function resize() {
-        dpr = window.devicePixelRatio || 1;
-        cvs.width  = window.innerWidth * dpr;
-        cvs.height = window.innerHeight * dpr;
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.scale(dpr, dpr);
-        cw = window.innerWidth;
-        ch = window.innerHeight;
-        particles = [];
+    function resize(){
+      dpr = window.devicePixelRatio||1;
+      canvas.width  = window.innerWidth*dpr;
+      canvas.height = window.innerHeight*dpr;
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr,dpr);
+      cw = window.innerWidth; ch = window.innerHeight;
+      particles = [];
+    }
+    window.addEventListener('resize', resize); resize();
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    class P {
+      constructor(x,y,vx,vy){
+        this.x=x; this.y=y; this.vx=vx; this.vy=vy;
+        this.size=4; this.alpha=1; this.decay=0.0001;
       }
-      resize();
-      window.addEventListener('resize', resize);
+      update(i){
+        this.x+=this.vx; this.y+=this.vy;
+        this.alpha-=this.decay;
+        if(this.alpha<=0) particles.splice(i,1);
+      }
+      draw(){
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.size,0,2*Math.PI);
+        ctx.fillStyle = `hsla(45,100%,60%,${this.alpha})`;
+        ctx.shadowBlur=40; ctx.shadowColor='gold';
+        ctx.fill();
+      }
+    }
 
-      ctx.globalCompositeOperation = 'lighter';
+    function spawnRandom(){
+      for(let i=0;i<4;i++){
+        const ang = Math.random()*2*Math.PI,
+              sp  = Math.random()*0.2+0.05;
+        particles.push(new P(
+          Math.random()*cw, Math.random()*ch,
+          Math.cos(ang)*sp, Math.sin(ang)*sp
+        ));
+      }
+    }
 
-      // Particle class
-      class P {
-        constructor(x,y,vx,vy,rev=false) {
-          this.x = x; this.y = y;
-          this.vx = vx; this.vy = vy;
-          this.rev = rev;
-          this.size = rev ? 8 : 5;
-          this.alpha = 1;
-          this.decay = rev ? 0.00005 : 0.0001; 
-          this.off = Math.random()*Math.PI*2;
-        }
-        update(i) {
-          if(this.rev) {
-            // Infinity parameters relative to canvas
-            const a = Math.max(Math.min(cw/4,200),120),
-                  b = Math.max(Math.min(ch/8,100),60),
-                  lt = t + this.off;
-            this.x = cw/2 + a * Math.sin(lt);
-            this.y = ch/2 + b * Math.sin(2*lt);
-          } else {
-            this.x += this.vx; this.y += this.vy;
-          }
-          this.alpha -= this.decay;
-          if(this.alpha <= 0) particles.splice(i,1);
-        }
-        draw() {
-          ctx.beginPath();
-          ctx.arc(this.x,this.y,this.size,0,2*Math.PI);
-          ctx.fillStyle = `hsla(45,100%,60%,${this.alpha})`;
-          ctx.shadowBlur = 40; ctx.shadowColor = 'gold';
-          ctx.fill();
-        }
+    // countdown
+    let num=1;
+    countEl.textContent=num;
+    const iv=setInterval(()=>{
+      num++;
+      if(num<=22){
+        countEl.style.opacity=0;
+        setTimeout(()=>{
+          countEl.textContent=num;
+          countEl.style.opacity=1;
+        },200);
+      }
+      if(num===22){
+        clearInterval(iv);
+        setTimeout(()=>{
+          countEl.textContent='22nd';
+          happy.style.opacity=1; rest.style.opacity=1;
+          poly.style.opacity=1; poly.style.transform='rotate(-2deg) scale(1)';
+          revolve=true;
+        },500);
+      }
+    },1000);
+
+    function drawInfinity(){
+      const a = Math.max(Math.min(cw/3,250),150),
+            b = Math.max(Math.min(ch/6,150),80);
+      ctx.beginPath();
+      for(let i=0;i<=100;i++){
+        const lt = t + (i/100)*Math.PI*2;
+        const x = cw/2 + a*Math.sin(lt);
+        const y = ch/2 + b*Math.sin(2*lt);
+        i===0? ctx.moveTo(x,y): ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = 'rgba(255,215,0,0.8)';
+      ctx.shadowBlur = 20; ctx.shadowColor = 'gold';
+      ctx.stroke();
+    }
+
+    (function loop(){
+      requestAnimationFrame(loop);
+      ctx.fillStyle='rgba(255,230,242,0.02)';
+      ctx.fillRect(0,0,cw,ch);
+
+      if(!revolve){
+        spawnRandom();
+      } else {
+        t += 0.02;            // speed
+        drawInfinity();
       }
 
-      function spawnRandom() {
-        for(let i=0;i<4;i++){
-          const ang = Math.random()*2*Math.PI,
-                spd = Math.random()*0.2+0.05;
-          particles.push(new P(
-            Math.random()*cw, Math.random()*ch,
-            Math.cos(ang)*spd, Math.sin(ang)*spd
-          ));
-        }
-      }
-
-      function spawnSwirl() {
-        // spawn multiple swirling particles per frame
-        for(let i=0;i<4;i++) particles.push(new P(0,0,0,0,true));
-      }
-
-      // Countdown logic
-      let num = 1;
-      countEl.textContent = num;
-      const iv = setInterval(()=>{
-        num++;
-        if(num<=22){
-          countEl.style.opacity = 0;
-          setTimeout(()=>{
-            countEl.textContent = num;
-            countEl.style.opacity = 1;
-          }, 200);
-        }
-        if(num===22){
-          clearInterval(iv);
-          setTimeout(()=>{
-            countEl.textContent = '22nd';
-            happy.style.opacity = 1;
-            happy.style.transform = 'translateY(-5px)';
-            rest.style.opacity = 1;
-            rest.style.transform = 'translateY(5px)';
-            poly.style.opacity = 1;
-            poly.style.transform = 'rotate(-2deg) scale(1)';
-            revolt = true;
-          }, 500);
-        }
-      },1000);
-
-      // Animation loop
-      (function loop(){
-        requestAnimationFrame(loop);
-        // gentle fade
-        ctx.fillStyle = 'rgba(255,230,242,0.02)';
-        ctx.fillRect(0,0,cw,ch);
-
-        if(revolt){
-          t += 0.01;           // speed up swirl
-          spawnSwirl();        // dense swirling
-        } else {
-          spawnRandom();       // random sparkles
-        }
-
-        particles.forEach((p,i)=>{ p.update(i); p.draw(); });
-      })();
-    };
+      particles.forEach((p,i)=>{ p.update(i); p.draw(); });
+    })();
+  };
   </script>
 </body>
 </html>
